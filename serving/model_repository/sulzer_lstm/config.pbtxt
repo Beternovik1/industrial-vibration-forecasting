@@ -1,0 +1,25 @@
+name: "sulzer_lstm"
+platform: "onnxruntime_onnx"
+max_batch_size: 8
+
+input [
+  {
+    name: "RAW_WINDOW"
+    data_type: TYPE_FP32
+    dims: [ 30, 4 ]
+  }
+]
+
+output [
+  {
+    name: "PREDICTED_VIBRATION"
+    data_type: TYPE_FP32
+    dims: [ 1 ]
+  }
+]
+
+instance_group [
+  {
+    kind: KIND_GPU
+  }
+]

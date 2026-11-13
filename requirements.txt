@@ -1,0 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cu130
+
+torch==2.13.0+cu130
+pandas==3.1.1
+mlflow==3.18.0
+onnx==1.23.0
+onnxruntime==1.30.0
