@@ -1,0 +1,56 @@
+services:
+  train:
+    build: .
+    working_dir: /app
+    entrypoint: ["python", "train.py"]
+    command: ["--model", "lstm"]
+    gpus: all
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+    volumes:
+      - ./data/raw:/app/data/raw:ro
+      - ./mlruns:/mlruns
+      - ./artifacts:/app/artifacts
+
+  mlflow:
+    build: .
+    entrypoint: ["mlflow"]
+    command:
+      - server
+      - --backend-store-uri
+      - sqlite:////mlruns/mlflow.db
+      - --artifacts-destination
+      - /mlruns/artifacts
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5000"
+      - --allowed-hosts
+      - "mlflow:5000,localhost:5000,127.0.0.1:5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlruns
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:5000/', timeout=3)
+      interval: 5s
+      timeout: 4s
+      retries: 20
+
+  triton:
+    image: nvcr.io/nvidia/tritonserver:26.09-py3
+    command: ["tritonserver", "--model-repository=/models"]
+    gpus: all
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    volumes:
+      - ./serving/model_repository:/models:ro

@@ -1,0 +1,12 @@
+.git/
+.dvc/
+.atl/
+__pycache__/
+*.py[cod]
+artifacts/
+data/
+material/
+mlruns/
+notebooks/
+reports/
+test/
