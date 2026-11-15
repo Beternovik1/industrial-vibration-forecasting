@@ -10,6 +10,7 @@ from callbacks.early_stopping import EarlyStopping
 from engine.trainer import evaluate_repeat_last_mae, fit
 from models.rnn import LSTMForecaster, RNNForecaster
 from utils.device import get_device
+from utils.plotting import plot_history
 
 
 def main():
@@ -109,11 +110,17 @@ def main():
             vibration_std,
         )
 
-        for epoch_index, train_loss in enumerate(history["train_loss"], start=1):
+        for epoch_index, train_mse in enumerate(history["train_mse_normalized"], start=1):
+            validation_mse = history["validation_mse_normalized"][epoch_index - 1]
             validation_mae = history["validation_mae_mm_s"][epoch_index - 1]
-            mlflow.log_metric("train_mse_normalized", train_loss, step=epoch_index)
+            mlflow.log_metric("train_mse_normalized", train_mse, step=epoch_index)
+            mlflow.log_metric("validation_mse_normalized", validation_mse, step=epoch_index)
             mlflow.log_metric("validation_mae_mm_s", validation_mae, step=epoch_index)
         mlflow.log_metric("best_validation_mae_mm_s", best_validation_mae)
+
+        plot_path = Path("artifacts/plots") / f"{args.model}_training_history.png"
+        plot_history(history, args.model, baseline_mae, plot_path)
+        mlflow.log_artifact(str(plot_path), artifact_path="plots")
 
         artifacts_dir = Path("artifacts")
         artifacts_dir.mkdir(parents=True, exist_ok=True)

@@ -25,8 +25,9 @@ def train_one_epoch(model, dataloader, criterion, optimizer, device):
     return total_loss / total_samples
 
 
-def evaluate_mae(model, dataloader, device, vibration_mean, vibration_std):
+def evaluate_validation_metrics(model, dataloader, device, vibration_mean, vibration_std):
     model.eval()
+    total_squared_error = 0.0
     total_absolute_error = 0.0
     total_samples = 0
 
@@ -36,6 +37,8 @@ def evaluate_mae(model, dataloader, device, vibration_mean, vibration_std):
             targets = targets.to(device)
             predictions = model(inputs)
 
+            total_squared_error += ((predictions - targets) ** 2).sum().item()
+
             # Compare in the original vibration units, not normalized units.
             predictions = predictions * vibration_std + vibration_mean
             targets = targets * vibration_std + vibration_mean
@@ -43,8 +46,19 @@ def evaluate_mae(model, dataloader, device, vibration_mean, vibration_std):
             total_samples += targets.size(0)
 
     if total_samples == 0:
-        raise ValueError("Cannot calculate MAE with an empty DataLoader.")
-    return total_absolute_error / total_samples
+        raise ValueError("Cannot evaluate an empty DataLoader.")
+    return total_squared_error / total_samples, total_absolute_error / total_samples
+
+
+def evaluate_mae(model, dataloader, device, vibration_mean, vibration_std):
+    _, validation_mae = evaluate_validation_metrics(
+        model,
+        dataloader,
+        device,
+        vibration_mean,
+        vibration_std,
+    )
+    return validation_mae
 
 
 def evaluate_repeat_last_mae(dataloader, device, vibration_mean, vibration_std):
@@ -81,7 +95,8 @@ def fit(
     vibration_std,
 ):
     history = {
-        "train_loss": [],
+        "train_mse_normalized": [],
+        "validation_mse_normalized": [],
         "validation_mae_mm_s": [],
     }
     if epochs <= 0:
@@ -95,19 +110,21 @@ def fit(
             optimizer,
             device,
         )
-        validation_mae = evaluate_mae(
+        validation_mse, validation_mae = evaluate_validation_metrics(
             model,
             validation_loader,
             device,
             vibration_mean,
             vibration_std,
         )
-        history["train_loss"].append(train_loss)
+        history["train_mse_normalized"].append(train_loss)
+        history["validation_mse_normalized"].append(validation_mse)
         history["validation_mae_mm_s"].append(validation_mae)
 
         print(
             f"Epoch {epoch + 1}/{epochs} | "
             f"Train MSE: {train_loss:.4f} | "
+            f"Validation MSE: {validation_mse:.4f} | "
             f"Validation MAE: {validation_mae:.4f} mm/s RMS"
         )
 
