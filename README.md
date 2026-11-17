@@ -1,6 +1,8 @@
 # Industrial Centrifuge Vibration Forecasting
 
-Project 2 for Deep Learning: forecast the vibration of an industrial Sulzer centrifuge ten minutes ahead from a thirty-minute window of sensor readings. The project compares recurrent neural networks, tracks experiments with MLflow, and serves the validation-selected LSTM with NVIDIA Triton.
+![Sulzer industrial centrifuge at Arab Potash Company](assets/sulzer-centrifuge.jpg)
+
+Forecast the vibration of an industrial Sulzer centrifuge ten minutes ahead from a thirty-minute window of sensor readings. The system compares recurrent neural networks, tracks experiments with MLflow, and serves the validation-selected LSTM with NVIDIA Triton.
 
 ## Project at a glance
 
@@ -76,7 +78,7 @@ The LSTM's best validation MAE occurred at epoch 5. Validation MAE did not impro
 
 Each new MLflow training run includes a two-panel PNG:
 
-1. Training and validation **normalized MSE** overlaid on the same axis, matching the Project 1 loss-curve style.
+1. Training and validation **normalized MSE** overlaid on the same axis.
 2. Validation **MAE in mm/s RMS** with the repeat-last baseline, because these are directly comparable in physical units.
 
 The run `78a9fe854ee94dd3ab80dd34b8502b7a` was created to log these plots using train/validation only; it has no test metric. The original selected/test-evaluated LSTM run remains `2900d1cab6184fc9a2b2359b47f4c953`. They are separate runs and should not be conflated.
